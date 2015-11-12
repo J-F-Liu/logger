@@ -1,17 +1,24 @@
 use {Logger, MessageType};
 
 /// Write log to multiple loggers.
-pub struct MultiLogger<'a> {
-  loggers: Vec<&'a Logger>
+pub struct MultiLogger {
+  loggers: Vec<Box<Logger>>
 }
 
-impl<'a> MultiLogger<'a> {
-  pub fn new(loggers: Vec<&Logger>) -> MultiLogger {
+impl MultiLogger {
+  pub fn new(loggers: Vec<Box<Logger>>) -> MultiLogger {
     MultiLogger { loggers: loggers }
+  }
+
+  pub fn stdout_and_filelogger(file_path: &str) -> MultiLogger {
+    use {StdoutLogger, FileLogger};
+    let l1 = Box::new(StdoutLogger);
+    let l2 = Box::new(FileLogger::new(file_path));
+    MultiLogger::new(vec![l1, l2])
   }
 }
 
-impl<'a> Logger for MultiLogger<'a> {
+impl Logger for MultiLogger {
   fn log(&self, msg_type:MessageType, message:&str) {
     for logger in &self.loggers {
       logger.log(msg_type, message);
@@ -21,10 +28,7 @@ impl<'a> Logger for MultiLogger<'a> {
 
 #[test]
 fn multi_logger_works() {
-  use {StdoutLogger, FileLogger};
-  let l1 = StdoutLogger;
-  let l2 = FileLogger::new("test2.log");
-  let logger = MultiLogger::new(vec![&l1, &l2]);
+  let logger = MultiLogger::stdout_and_filelogger("test2.log");
   logger.info("Test info message.");
   logger.warn("Test warn message.");
   logger.error("Test error message.");

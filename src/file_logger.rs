@@ -3,23 +3,23 @@ use std::fs::{File, OpenOptions};
 use {Logger, MessageType, format_message};
 
 /// Write log to text file.
-pub struct FileLogger<'a> {
-  log_file: &'a str
+pub struct FileLogger {
+  log_file: String
 }
 
-impl<'a> FileLogger<'a> {
+impl FileLogger {
   pub fn new(file_path: &str) -> FileLogger {
     File::create(file_path).unwrap();
-    FileLogger { log_file: file_path }
+    FileLogger { log_file: file_path.to_string() }
   }
 }
 
-impl<'a> Logger for FileLogger<'a> {
+impl Logger for FileLogger {
   fn log(&self, msg_type:MessageType, message:&str) {
     let mut file = OpenOptions::new()
             .append(true)
             .write(true)
-            .open(self.log_file).unwrap();
+            .open(&self.log_file).unwrap();
     file.write(format_message(msg_type, message).as_bytes()).unwrap();
   }
 }
